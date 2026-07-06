@@ -8,15 +8,13 @@
     
     <style>
         /* =======================================================
-           💡 大外枠（線や影など）を綺麗に無くす設定
+           ✨ 全面一体化デザインの設定（大外の枠・影・背景を完全に除去）
            ======================================================= */
         .screen-container {
-            border: none !important;       /* 外枠の線を消します */
-            box-shadow: none !important;   /* 外枠の影を消します */
-            
-            /* 👇もし「白い背景の四角い箱」自体も完全に消して、画面全体の背景と一体化させたい場合は、
-               下の行の先頭にある「/*」と末尾の「*/」を消して有効化してください。 */
-            /* background: transparent !important; */
+            border: none !important;            /* 外枠の線を消す */
+            box-shadow: none !important;        /* 外枠の影を消す */
+            background: transparent !important; /* 白い背景ボックスを透明にして画面背景と一体化 */
+            padding: 10px !important;           /* 画面端の余白を程よく調整 */
         }
 
         /* ヒントボタンのデザイン */
