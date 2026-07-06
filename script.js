@@ -1,7 +1,4 @@
-const titleEl = document.getElementById('main-title');
 const grid = document.getElementById('sudoku-grid');
-const modeToggle = document.getElementById('mode-toggle');
-const modeText = document.getElementById('mode-text');
 const errorText = document.getElementById('error-text');
 const timerDisplay = document.getElementById('timer-display');
 const btnPause = document.getElementById('btn-pause');
@@ -9,8 +6,7 @@ const pauseScreen = document.getElementById('pause-screen');
 const numPadArea = document.getElementById('num-pad-area');
 const btnReset = document.getElementById('btn-reset');
 const btnClear = document.getElementById('btn-clear');
-const saveArea = document.getElementById('save-area');
-const genArea = document.getElementById('gen-area');
+const btnToMenu = document.getElementById('btn-to-menu');
 const clearScreen = document.getElementById('clear-screen');
 const finalTimeSpan = document.getElementById('final-time');
 const loadModal = document.getElementById('load-modal');
@@ -25,6 +21,25 @@ let startTime = 0;
 let elapsedTime = 0;
 let timerInterval = null;
 
+// 画面を切り替える新機能
+function showScreen(screenId) {
+    document.getElementById('menu-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById(screenId).style.display = 'flex';
+}
+
+// メニューから難易度を選んだときの処理
+function handleMenuGenerate(difficulty) {
+    isPlayMode = false; // 一旦リセットして生成できるようにする
+    generateSudoku(difficulty);
+    
+    // 自動生成が完了したらゲーム画面を立ち上げてスタート
+    isPlayMode = true;
+    startTimer();
+    showScreen('game-screen');
+}
+
+// 盤面のマス作成
 for (let i = 0; i < 81; i++) {
     const cell = document.createElement('div');
     cell.classList.add('cell');
@@ -122,8 +137,6 @@ function countSolutions(board, limit = 2) {
 }
 
 function generateSudoku(difficulty) {
-    if (isPlayMode) return;
-
     cellsArray.forEach(cell => {
         setCellValue(cell, "");
         cell.classList.remove('fixed', 'user-input');
@@ -174,7 +187,7 @@ function generateSudoku(difficulty) {
 }
 
 function savePuzzleCustom() {
-    const saveName = prompt("この問題につける名前を入力してください（何個でも保存できます）：");
+    const saveName = prompt("この問題につける名前を入力してください：");
     if (saveName === null) return; 
     const trimmedName = saveName.trim();
     if (trimmedName === "") {
@@ -201,7 +214,6 @@ function savePuzzleCustom() {
 }
 
 function openLoadModal() {
-    if (isPlayMode) return;
     modalSaveList.innerHTML = "";
     let customSaves = JSON.parse(localStorage.getItem('sudoku_studio_custom_saves') || '{}');
     const saveNames = Object.keys(customSaves);
@@ -258,19 +270,19 @@ function loadPuzzleCustom(name) {
 
     errorText.innerText = "";
     clearAllHighlights();
-    isPlayMode = false;
+    
+    // データを読み込んだら自動でプレイ画面へ遷移して開始
+    isPlayMode = true;
     isPaused = false;
     pauseScreen.style.display = "none";
     numPadArea.style.opacity = "1";
-    modeToggle.innerText = "問題を確定してプレイ開始";
-    modeToggle.style.display = "inline-block";
-    btnPause.style.display = "none";
-    toggleUIVisibility(true);
-    modeText.innerText = "MODE: 問題を入力中";
+    btnPause.style.display = "inline-block";
     resetTimer();
+    startTimer();
     updateCounts();
     closeLoadModal();
-    alert(`[${name}] を読み込みました`);
+    
+    showScreen('game-screen');
 }
 
 function deletePuzzleCustom(name) {
@@ -367,25 +379,20 @@ function isValidMove(targetCell, num) {
     const index = parseInt(targetCell.dataset.index);
     const boxIdx = Math.floor(row / 3) * 3 + Math.floor(col / 3);
     const numStr = String(num);
-
     const inGroup = (indices) => indices.some(i => i !== index && getCellValue(cellsArray[i]) === numStr);
-
     return !inGroup(rowIndices[row]) && !inGroup(colIndices[col]) && !inGroup(boxIndices[boxIdx]);
 }
 
 function launchConfetti() {
     const colors = ['#f6e05e', '#ed64a6', '#4299e1', '#48bb78', '#9f7aea', '#ffffff'];
     clearScreen.querySelectorAll('.confetti').forEach(e => e.remove());
-    
     for(let i = 0; i < 80; i++) {
         let conf = document.createElement('div');
         conf.classList.add('confetti');
         conf.style.left = Math.random() * 100 + 'vw';
         conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        
         const duration = Math.random() * 2.5 + 1.5;
         const delay = Math.random() * 1.5;
-        
         conf.style.animation = `fall ${duration}s linear ${delay}s forwards`;
         clearScreen.appendChild(conf);
     }
@@ -393,7 +400,7 @@ function launchConfetti() {
 
 function pressMainNumber(num) {
     if (isPaused) return;
-    if (!selectedCell || (isPlayMode && selectedCell.classList.contains('fixed'))) return;
+    if (!selectedCell || selectedCell.classList.contains('fixed')) return;
     errorText.innerText = "";
 
     if (num === 0) {
@@ -415,52 +422,35 @@ function pressMainNumber(num) {
 
     selectedCell.memoValues = Array(10).fill(false);
     renderMemo(selectedCell);
-
     setCellValue(selectedCell, num);
-    if (!isPlayMode) {
-        selectedCell.classList.add('fixed');
-    } else {
-        selectedCell.classList.add('user-input');
+    selectedCell.classList.add('user-input');
         
-        if (checkGameClear()) {
-            stopTimer();
-            if (selectedCell) selectedCell.classList.remove('selected');
-            selectedCell = null;
-            clearAllHighlights();
-            
-            const timeText = timerDisplay.innerText;
-            finalTimeSpan.innerText = timeText;
-            
-            toggleUIVisibility(true);
-            btnPause.style.display = "none";
-            
-            setTimeout(() => { 
-                clearScreen.style.display = 'flex'; 
-                launchConfetti();
-            }, 300);
-        }
+    if (checkGameClear()) {
+        stopTimer();
+        if (selectedCell) selectedCell.classList.remove('selected');
+        selectedCell = null;
+        clearAllHighlights();
+        const timeText = timerDisplay.innerText;
+        finalTimeSpan.innerText = timeText;
+        
+        setTimeout(() => { 
+            clearScreen.style.display = 'flex'; 
+            launchConfetti();
+        }, 300);
     }
     updateCounts();
     if (selectedCell) getHighlightTargetAndTrigger(selectedCell); 
 }
 
 let lastMemoPress = { index: null, num: null, time: 0 };
-
 function pressMemoNumber(num) {
     if (isPaused) return;
-    if (!selectedCell || (isPlayMode && selectedCell.classList.contains('fixed'))) return;
+    if (!selectedCell || selectedCell.classList.contains('fixed')) return;
     if (getCellValue(selectedCell) !== "") return; 
     
-    if (!isPlayMode) {
-        alert("メモ機能は「プレイ開始」後（ゲーム中）にのみ使用できます！");
-        return;
-    }
-
     const cellIndex = selectedCell.dataset.index;
     const now = Date.now();
-    if (lastMemoPress.index === cellIndex && lastMemoPress.num === num && (now - lastMemoPress.time) < 250) {
-        return;
-    }
+    if (lastMemoPress.index === cellIndex && lastMemoPress.num === num && (now - lastMemoPress.time) < 250) return;
     lastMemoPress = { index: cellIndex, num, time: now };
 
     errorText.innerText = "";
@@ -471,9 +461,8 @@ function pressMemoNumber(num) {
 
 function clearMemo() {
     if (isPaused) return;
-    if (!selectedCell || (isPlayMode && selectedCell.classList.contains('fixed'))) return;
+    if (!selectedCell || selectedCell.classList.contains('fixed')) return;
     if (getCellValue(selectedCell) !== "") return;
-    
     selectedCell.memoValues = Array(10).fill(false);
     renderMemo(selectedCell);
     getHighlightTargetAndTrigger(selectedCell);
@@ -522,21 +511,19 @@ function resetTimer() { clearInterval(timerInterval); elapsedTime = 0; timerDisp
 function closeClearScreen() { clearScreen.style.display = 'none'; }
 
 function pauseGame() {
-    if (!isPlayMode || isPaused) return;
+    if (isPaused) return;
     isPaused = true;
     stopTimer();
     pauseScreen.style.display = "flex";
     numPadArea.style.opacity = "0.15";
-    modeToggle.style.display = "none";
 }
 
 function resumeGame() {
-    if (!isPlayMode || !isPaused) return;
+    if (!isPaused) return;
     isPaused = false;
     startTimer();
     pauseScreen.style.display = "none";
     numPadArea.style.opacity = "1";
-    modeToggle.style.display = "inline-block";
 }
 
 function clearAllHighlights() {
@@ -549,43 +536,17 @@ function clearAllHighlights() {
     });
 }
 
-function toggleUIVisibility(showAll) {
-    if (showAll) {
-        titleEl.style.display = "block";
-        btnReset.style.display = "inline-block";
-        btnClear.style.display = "inline-block";
-        saveArea.style.display = "block";
-        genArea.style.display = "block";
-        modeText.style.display = "block";
-    } else {
-        titleEl.style.display = "none";
-        btnReset.style.display = "none";
-        btnClear.style.display = "none";
-        saveArea.style.display = "none";
-        genArea.style.display = "none";
-        modeText.style.display = "none";
+// ゲーム画面からメニューに戻るボタンの挙動
+btnToMenu.addEventListener('click', () => {
+    if (!isPaused && elapsedTime > 0) {
+        if (!confirm("ゲームを中断してメニューに戻りますか？\n(進行状況はリセットされます)")) {
+            return;
+        }
     }
-}
-
-modeToggle.addEventListener('click', () => {
-    if (isPaused) return;
-    errorText.innerText = "";
-    clearAllHighlights();
-
-    if (!isPlayMode) {
-        isPlayMode = true;
-        modeToggle.innerText = "問題を修正する";
-        startTimer();
-        toggleUIVisibility(false);
-        btnPause.style.display = "inline-block";
-    } else {
-        isPlayMode = false;
-        modeToggle.innerText = "問題を確定してプレイ開始";
-        modeText.innerText = "MODE: 問題を入力中";
-        stopTimer();
-        toggleUIVisibility(true);
-        btnPause.style.display = "none";
-    }
+    stopTimer();
+    resetTimer();
+    isPlayMode = false;
+    showScreen('menu-screen');
 });
 
 btnReset.addEventListener('click', () => {
@@ -600,13 +561,14 @@ btnReset.addEventListener('click', () => {
         });
         errorText.innerText = "";
         clearAllHighlights();
-        if (isPlayMode) { resetTimer(); startTimer(); } else { resetTimer(); }
+        resetTimer(); 
+        startTimer();
         updateCounts();
     }
 });
 
 btnClear.addEventListener('click', () => {
-    if (confirm("盤面を完全にクリアして、最初から新しい問題を作り直しますか？")) {
+    if (confirm("ゲームを終了し、盤面をクリアしてメニューに戻りますか？")) {
         cellsArray.forEach(cell => {
             setCellValue(cell, "");
             cell.classList.remove('fixed', 'user-input');
@@ -615,17 +577,14 @@ btnClear.addEventListener('click', () => {
         });
         errorText.innerText = "";
         clearAllHighlights();
+        stopTimer();
+        resetTimer();
         isPlayMode = false;
         isPaused = false;
         pauseScreen.style.display = "none";
         numPadArea.style.opacity = "1";
-        modeToggle.innerText = "問題を確定してプレイ開始";
-        modeToggle.style.display = "inline-block";
-        btnPause.style.display = "none";
-        toggleUIVisibility(true);
-        modeText.innerText = "MODE: 問題を入力中";
-        resetTimer();
         updateCounts();
+        showScreen('menu-screen'); // メニューに戻す
     }
 });
 
