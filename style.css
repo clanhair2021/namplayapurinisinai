@@ -7,7 +7,7 @@
     --border: #dddddd;
     --border-dark: #333333;
     --error: #c62828;
-    --radius: 8px;
+    --radius: 8px; /* 💡将来テーマ変更時にここを 0px にすれば四角くなり、16px にすればもっと丸くなります */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,7 +71,7 @@ body {
     cursor: pointer;
     font-weight: 600;
     font-size: 1rem;
-    border-radius: 4px;
+    border-radius: var(--radius);
     transition: all 0.15s ease;
     text-align: center;
 }
@@ -172,7 +172,7 @@ body {
     color: var(--error); text-align: center; font-size: 0.85rem; font-weight: 600; min-height: 1.2rem; width: 100%;
 }
 
-/* テンキーとメモキーのレイアウト */
+/* テンキーとメモキーのレイアウト（3x3がピッタリ綺麗に並ぶ設定） */
 .keypad-container {
     display: flex;
     flex-direction: row;
@@ -187,7 +187,7 @@ body {
     background: #fafafa;
     border: 1px solid var(--border);
     padding: 6px;
-    border-radius: 6px;
+    border-radius: var(--radius);
     align-content: start;
 }
 
@@ -213,7 +213,7 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    aspect-ratio: 1.1;
+    aspect-ratio: 1; /* 綺麗な正方形へ調整 */
 }
 .num-btn { color: var(--primary); }
 
@@ -221,12 +221,7 @@ body {
     background: var(--primary);
     color: white;
 }
-.btn-memo-clear, .clear-btn {
-    grid-column: span 3;
-    font-size: 0.75rem;
-    padding: 6px 0;
-    aspect-ratio: auto;
-}
+
 .num-count {
     position: absolute;
     bottom: 1px; right: 3px;
@@ -285,7 +280,7 @@ body {
     background: var(--white);
     color: var(--text);
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: var(--radius);
     transition: all 0.1s;
 }
 .btn-setting-action.active {
@@ -319,7 +314,7 @@ body {
     color: white;
     border: none;
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: pointer;
     margin-top: 10px;
 }
@@ -344,7 +339,7 @@ body {
     display: none; flex-direction: column; align-items: center; justify-content: center; gap: 15px; z-index: 10;
 }
 .pause-title { font-size: 1.5rem; font-weight: 700; }
-.btn-resume { background: var(--primary); color: white; border: none; padding: 10px 25px; font-weight: 600; cursor: pointer; border-radius: 4px; }
+.btn-resume { background: var(--primary); color: white; border: none; padding: 10px 25px; font-weight: 600; cursor: pointer; border-radius: var(--radius); }
 
 .clear-overlay {
     position: fixed;
@@ -354,10 +349,9 @@ body {
 .clear-content { background: var(--white); padding: 30px; border-radius: var(--radius); text-align: center; width: 90%; max-width: 320px; }
 .clear-title { font-size: 1.8rem; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
 .clear-msg { color: var(--text); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }
-.clear-btn-close { padding: 10px 30px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: 4px; cursor: pointer; }
+.clear-btn-close { padding: 10px 30px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: var(--radius); cursor: pointer; }
 
 @keyframes errorFlash { 0% { outline: 3px solid var(--error); } 100% { outline: 0px solid transparent; } }
 .invalid-flash { animation: errorFlash 0.4s ease; }
 .confetti { position: absolute; width: 6px; height: 6px; z-index: 120; opacity: 0.8; }
 @keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); } 100% { transform: translateY(100vh) rotate(360deg); } }
-
