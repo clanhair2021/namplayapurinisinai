@@ -8,78 +8,81 @@
 </head>
 <body>
 
-    <h1 id="main-title">美容室CLan<br>からの挑戦状</h1>
-    
-    <div class="controls">
-        <div>
-            <button class="btn" id="mode-toggle">問題を確定してプレイ開始</button>
-            <button class="btn btn-reset" id="btn-reset">リセット</button>
-            <button class="btn btn-clear" id="btn-clear">全部消去</button>
+    <div id="menu-screen" class="screen-container">
+        <button class="btn-settings" id="btn-settings">⚙</button>
+        
+        <h1 class="menu-title">美容室CLan<br>からの挑戦状</h1>
+        
+        <div class="menu-difficulty-list">
+            <button class="btn-menu easy" onclick="handleMenuGenerate('easy')">初級</button>
+            <button class="btn-menu normal" onclick="handleMenuGenerate('normal')">中級</button>
+            <button class="btn-menu hard" onclick="handleMenuGenerate('hard')">上級</button>
+            <button class="btn-menu expert" onclick="handleMenuGenerate('expert')">最高級</button>
+        </div>
+        
+        <button class="btn-menu-load-trigger" onclick="openLoadModal()">保存したステージから読込</button>
+    </div>
+
+
+    <div id="game-screen" class="screen-container" style="display: none;">
+        
+        <div class="controls">
+            <div class="top-buttons">
+                <button class="btn btn-to-menu" id="btn-to-menu">メニューへ</button>
+                <button class="btn btn-reset" id="btn-reset">リセット</button>
+                <button class="btn btn-clear" id="btn-clear">全部消去</button>
+            </div>
+
+            <div class="save-load-area" id="save-area">
+                <div class="slot-group">
+                    <button class="btn btn-save" onclick="savePuzzleCustom()">この状態をお気に入り保存</button>
+                </div>
+            </div>
+            
+            <div class="timer-container">
+                <div class="timer" id="timer-display">00:00</div>
+                <button class="btn btn-pause" id="btn-pause" onclick="pauseGame()">PAUSE</button>
+            </div>
+            
+            <div class="error-message" id="error-text"></div>
         </div>
 
-        <div class="gen-area" id="gen-area">
-            <div class="gen-title">-- 自動生成  難易度選択 --</div>
-            <div class="gen-buttons">
-                <button class="btn-gen easy" onclick="generateSudoku('easy')">初級</button>
-                <button class="btn-gen normal" onclick="generateSudoku('normal')">中級</button>
-                <button class="btn-gen hard" onclick="generateSudoku('hard')">上級</button>
-                <button class="btn-gen expert" onclick="generateSudoku('expert')">最高級</button>
+        <div class="grid-wrapper">
+            <div class="grid" id="sudoku-grid"></div>
+            <div class="pause-overlay" id="pause-screen">
+                <div class="pause-title">PAUSED</div>
+                <button class="btn-resume" onclick="resumeGame()">RESUME</button>
             </div>
         </div>
 
-        <div class="save-load-area" id="save-area">
-            <div class="save-load-title">お気に入りマネージャー</div>
-            <div class="slot-group">
-                <button class="btn btn-save" onclick="savePuzzleCustom()">お気に入り保存</button>
-                <button class="btn btn-load" onclick="openLoadModal()">一覧から読込</button>
+        <div class="keypad-container" id="num-pad-area">
+            <div class="memo-pad">
+                <div class="pad-title memo">MEMO</div>
+                <button class="btn-memo-num" onclick="pressMemoNumber(1)">1</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(2)">2</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(3)">3</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(4)">4</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(5)">5</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(6)">6</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(7)">7</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(8)">8</button>
+                <button class="btn-memo-num" onclick="pressMemoNumber(9)">9</button>
+                <button class="btn-memo-clear" onclick="clearMemo()">メモを消す</button>
             </div>
-        </div>
 
-        <div class="mode-status" id="mode-text">MODE: 問題を入力中</div>
-        
-        <div class="timer-container">
-            <div class="timer" id="timer-display">00:00</div>
-            <button class="btn btn-pause" id="btn-pause" onclick="pauseGame()">PAUSE</button>
-        </div>
-        
-        <div class="error-message" id="error-text"></div>
-    </div>
-
-    <div class="grid-wrapper">
-        <div class="grid" id="sudoku-grid"></div>
-        <div class="pause-overlay" id="pause-screen">
-            <div class="pause-title">PAUSED</div>
-            <button class="btn-resume" onclick="resumeGame()">RESUME</button>
-        </div>
-    </div>
-
-    <div class="keypad-container" id="num-pad-area">
-        <div class="memo-pad">
-            <div class="pad-title memo">MEMO</div>
-            <button class="btn-memo-num" onclick="pressMemoNumber(1)">1</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(2)">2</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(3)">3</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(4)">4</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(5)">5</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(6)">6</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(7)">7</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(8)">8</button>
-            <button class="btn-memo-num" onclick="pressMemoNumber(9)">9</button>
-            <button class="btn-memo-clear" onclick="clearMemo()">メモを消す</button>
-        </div>
-
-        <div class="main-pad">
-            <div class="pad-title main">INPUT</div>
-            <button class="num-btn" id="btn-num-1" onclick="pressMainNumber(1)">1<span class="num-count" id="count-1">0/9</span></button>
-            <button class="num-btn" id="btn-num-2" onclick="pressMainNumber(2)">2<span class="num-count" id="count-2">0/9</span></button>
-            <button class="num-btn" id="btn-num-3" onclick="pressMainNumber(3)">3<span class="num-count" id="count-3">0/9</span></button>
-            <button class="num-btn" id="btn-num-4" onclick="pressMainNumber(4)">4<span class="num-count" id="count-4">0/9</span></button>
-            <button class="num-btn" id="btn-num-5" onclick="pressMainNumber(5)">5<span class="num-count" id="count-5">0/9</span></button>
-            <button class="num-btn" id="btn-num-6" onclick="pressMainNumber(6)">6<span class="num-count" id="count-6">0/9</span></button>
-            <button class="num-btn" id="btn-num-7" onclick="pressMainNumber(7)">7<span class="num-count" id="count-7">0/9</span></button>
-            <button class="num-btn" id="btn-num-8" onclick="pressMainNumber(8)">8<span class="num-count" id="count-8">0/9</span></button>
-            <button class="num-btn" id="btn-num-9" onclick="pressMainNumber(9)">9<span class="num-count" id="count-9">0/9</span></button>
-            <button class="num-btn clear-btn" onclick="pressMainNumber(0)">マスを空にする</button>
+            <div class="main-pad">
+                <div class="pad-title main">INPUT</div>
+                <button class="num-btn" id="btn-num-1" onclick="pressMainNumber(1)">1<span class="num-count" id="count-1">0/9</span></button>
+                <button class="num-btn" id="btn-num-2" onclick="pressMainNumber(2)">2<span class="num-count" id="count-2">0/9</span></button>
+                <button class="num-btn" id="btn-num-3" onclick="pressMainNumber(3)">3<span class="num-count" id="count-3">0/9</span></button>
+                <button class="num-btn" id="btn-num-4" onclick="pressMainNumber(4)">4<span class="num-count" id="count-4">0/9</span></button>
+                <button class="num-btn" id="btn-num-5" onclick="pressMainNumber(5)">5<span class="num-count" id="count-5">0/9</span></button>
+                <button class="num-btn" id="btn-num-6" onclick="pressMainNumber(6)">6<span class="num-count" id="count-6">0/9</span></button>
+                <button class="num-btn" id="btn-num-7" onclick="pressMainNumber(7)">7<span class="num-count" id="count-7">0/9</span></button>
+                <button class="num-btn" id="btn-num-8" onclick="pressMainNumber(8)">8<span class="num-count" id="count-8">0/9</span></button>
+                <button class="num-btn" id="btn-num-9" onclick="pressMainNumber(9)">9<span class="num-count" id="count-9">0/9</span></button>
+                <button class="num-btn clear-btn" onclick="pressMainNumber(0)">マスを空にする</button>
+            </div>
         </div>
     </div>
 
