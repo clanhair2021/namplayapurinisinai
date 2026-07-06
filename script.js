@@ -14,7 +14,7 @@ let isPaused = false;
 const cellsArray = [];
 
 let solvedBoard = Array(81).fill(0); 
-let judgeMode = 'blind';             // Default: 'blind' or 'assist'
+let judgeMode = 'blind';             
 let currentDifficulty = 'normal';   
 let currentDifficultyText = "中級";
 
@@ -63,7 +63,6 @@ function updateTimerDisplay() {
     document.getElementById('status-timer').innerText = `⏱ ${m}:${s}`;
 }
 
-// 💡 モード切替UIのアップデート関数
 function setJudgeMode(mode) {
     judgeMode = mode;
     const btnBlind = document.getElementById('btn-mode-blind');
@@ -111,16 +110,20 @@ function handleMenuGenerate(difficulty) {
     startTimer();
 }
 
-// 💡 修正点：設定画面を開いた瞬間に現在のモードをボタンに同期させる
+// 💡 修正点：ゲーム中（盤面のある画面）ならモード選択項目を非表示にする
 function openSettingsModal() {
-    setJudgeMode(judgeMode); // 現在の選択状態（内部変数）をUIのボタンに100%同期
+    setJudgeMode(judgeMode); 
+
+    const modeSettingItem = document.getElementById('setting-item-mode');
 
     if (isPlayMode) {
+        if (modeSettingItem) modeSettingItem.style.display = 'none'; // ゲーム中はモード選択を隠す
         gameActionsArea.style.display = 'flex';
         isPaused = true;
         pauseScreen.style.display = "flex";
         numPadArea.style.opacity = "0.15";
     } else {
+        if (modeSettingItem) modeSettingItem.style.display = 'flex'; // メニュー画面ならモード選択を出す
         gameActionsArea.style.display = 'none';
     }
     settingsModal.style.display = 'flex';
@@ -571,7 +574,6 @@ function calculateComboAddScore() {
     return scored;
 }
 
-// 💡 メモ自動消去ロジック（干渉するマスからメモを消す）
 function autoClearMemos(confirmedIndex, num) {
     const targetCell = cellsArray[confirmedIndex];
     const row = parseInt(targetCell.dataset.row);
@@ -593,6 +595,68 @@ function autoClearMemos(confirmedIndex, num) {
             }
         }
     });
+}
+
+// 💡 【新機能】ヒントボタンが押された時のロジック
+function triggerHint() {
+    if (!isPlayMode || isPaused) return;
+    errorText.innerText = "";
+
+    let targetCell = selectedCell;
+
+    // マスが未選択、または固定マスの場合は、まだ正解が埋まっていない空欄からランダムに自動選出
+    if (!targetCell || targetCell.classList.contains('fixed')) {
+        const candidates = cellsArray.filter(cell => {
+            if (cell.classList.contains('fixed')) return false;
+            const val = getCellValue(cell);
+            const idx = parseInt(cell.dataset.index);
+            // 空欄か、もしくは間違った数字が入っているマスを候補にする
+            return val === "" || parseInt(val) !== solvedBoard[idx];
+        });
+
+        if (candidates.length === 0) return; // すべて完成しているなら終了
+        targetCell = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    const index = parseInt(targetCell.dataset.index);
+    const correctNum = solvedBoard[index];
+
+    // どこが埋まったか分かりやすくするため、ヒント対象マスに選択を移動
+    if (selectedCell) selectedCell.classList.remove('selected');
+    selectedCell = targetCell;
+    targetCell.classList.add('selected');
+
+    // 正解の数字を強制的に確定
+    targetCell.memoValues = Array(10).fill(false);
+    renderMemo(targetCell);
+    setCellValue(targetCell, correctNum);
+    targetCell.classList.add('user-input');
+
+    // 確定したため周辺マスの干渉メモを自動消去（連動発動）
+    autoClearMemos(index, correctNum);
+
+    // ヒントを使用したためコンボはリセット
+    comboCount = 0;
+    errorText.innerText = "💡 ヒントでマスを1つ埋めました！";
+    
+    updateStatusBar();
+    updateCounts();
+    getHighlightTargetAndTrigger(targetCell);
+
+    // クリアチェック
+    if (checkGameClear()) {
+        if (judgeMode === 'blind') {
+            if (checkFinalAnswer()) {
+                triggerClearSuccess();
+            } else {
+                errorText.innerText = "⚠️ 盤面が埋まりましたが、どこかに間違いがあります！";
+                isFirstTimePerfect = false;
+                updateStatusBar();
+            }
+        } else {
+            triggerClearSuccess();
+        }
+    }
 }
 
 function pressMainNumber(num) {
@@ -618,7 +682,6 @@ function pressMainNumber(num) {
 
     const isNewFill = (currentVal === ""); 
 
-    // モード判定
     if (judgeMode === 'assist') {
         const correctNum = solvedBoard[index];
         if (num !== correctNum) {
@@ -662,7 +725,6 @@ function pressMainNumber(num) {
     setCellValue(selectedCell, num);
     selectedCell.classList.add('user-input');
 
-    // 周辺マスの干渉メモを自動消去
     autoClearMemos(index, num);
 
     updateStatusBar();
