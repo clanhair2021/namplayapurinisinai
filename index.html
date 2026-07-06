@@ -5,7 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>美容室CLanからの挑戦状</title>
     <link rel="stylesheet" href="style.css">
+    
     <style>
+        /* =======================================================
+           💡 大外枠（線や影など）を綺麗に無くす設定
+           ======================================================= */
+        .screen-container {
+            border: none !important;       /* 外枠の線を消します */
+            box-shadow: none !important;   /* 外枠の影を消します */
+            
+            /* 👇もし「白い背景の四角い箱」自体も完全に消して、画面全体の背景と一体化させたい場合は、
+               下の行の先頭にある「/*」と末尾の「*/」を消して有効化してください。 */
+            /* background: transparent !important; */
+        }
+
+        /* ヒントボタンのデザイン */
         .btn-hint {
             width: 100%;
             background: var(--white);
