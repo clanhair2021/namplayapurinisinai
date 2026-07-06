@@ -27,22 +27,6 @@ function handleMenuGenerate(difficulty) {
     showScreen('game-screen');
 }
 
-// 明るさ調整（ライト/ダーク切り替え）
-function setBrightness(mode) {
-    const lightBtn = document.getElementById('mode-light-btn');
-    const darkBtn = document.getElementById('mode-dark-btn');
-    
-    if (mode === 'dark') {
-        document.body.classList.add('dark-mode');
-        darkBtn.classList.add('active');
-        lightBtn.classList.remove('active');
-    } else {
-        document.body.classList.remove('dark-mode');
-        lightBtn.classList.add('active');
-        darkBtn.classList.remove('active');
-    }
-}
-
 // 設定モーダルの開閉
 function openSettingsModal() {
     if (isPlayMode) {
@@ -92,8 +76,9 @@ function triggerReset() {
     }
 }
 
+// ギブアップ処理
 function triggerQuit() {
-    if (confirm("ゲームを終了してメニューに戻りますか？\n（現在の進行状況は破棄されます）")) {
+    if (confirm("本当にギブアップしてメニューに戻りますか？\n（現在の進行状況は破棄されます）")) {
         isPlayMode = false;
         isPaused = false;
         pauseScreen.style.display = "none";
@@ -278,6 +263,7 @@ function savePuzzleCustom() {
     }
 }
 
+// 読込モーダルを開く
 function openLoadModal() {
     modalSaveList.innerHTML = "";
     let customSaves = JSON.parse(localStorage.getItem('sudoku_studio_custom_saves') || '{}');
