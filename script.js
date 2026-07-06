@@ -13,24 +13,20 @@ let isPlayMode = false;
 let isPaused = false;
 const cellsArray = [];
 
-// ==========================================
-// 💡 【新仕様】 スコア・タイマー状態管理
-// ==========================================
-let solvedBoard = Array(81).fill(0); // 内部正解データ
-let judgeMode = 'classic';          // 'classic'(最後まで秘密) または 'instant'(1手即判定)
-let currentDifficulty = 'normal';   // 'easy', 'normal', 'hard', 'expert'
+let solvedBoard = Array(81).fill(0); 
+let judgeMode = 'blind';             // 💡 'blind'(ブラインド) または 'assist'(アシスト)
+let currentDifficulty = 'normal';   
 let currentDifficultyText = "中級";
 
-let gameScore = 0;                  // プレイ中累積スコア
-let comboCount = 0;                 // 現在のコンボ数
-let maxComboCount = 0;              // 今回のプレイの最大コンボ数
-let missCount = 0;                  // ミス回数
-let isFirstTimePerfect = true;      // 一発正解フラグ（クラシック用）
+let gameScore = 0;                  
+let comboCount = 0;                 
+let maxComboCount = 0;              
+let missCount = 0;                  
+let isFirstTimePerfect = true;      
 
-let timerInterval = null;           // タイマー動作用
-let elapsedTime = 0;                // 経過時間（秒）
+let timerInterval = null;           
+let elapsedTime = 0;                
 
-// 💡 難易度別のゲーム基本パラメータ設定
 const difficultyConfig = {
     easy: { base: 10, targetTime: 300, rateInstant: 2, rateClassic: 4 },
     normal: { base: 20, targetTime: 600, rateInstant: 3, rateClassic: 5 },
@@ -38,14 +34,12 @@ const difficultyConfig = {
     expert: { base: 50, targetTime: 1500, rateInstant: 8, rateClassic: 12 }
 };
 
-// 画面切り替えシステム
 function showScreen(screenId) {
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'none';
     document.getElementById(screenId).style.display = 'flex';
 }
 
-// 💡 タイマー制御関数
 function startTimer() {
     stopTimer();
     timerInterval = setInterval(() => {
@@ -69,20 +63,19 @@ function updateTimerDisplay() {
     document.getElementById('status-timer').innerText = `⏱ ${m}:${s}`;
 }
 
-// 💡 設定画面でのモード変更
+// 💡 モード切替UIのアップデート
 function setJudgeMode(mode) {
     judgeMode = mode;
-    document.getElementById('btn-mode-classic').classList.remove('active');
-    document.getElementById('btn-mode-instant').classList.remove('active');
+    document.getElementById('btn-mode-blind').classList.remove('active');
+    document.getElementById('btn-mode-assist').classList.remove('active');
     
-    if (mode === 'classic') {
-        document.getElementById('btn-mode-classic').classList.add('active');
+    if (mode === 'blind') {
+        document.getElementById('btn-mode-blind').classList.add('active');
     } else {
-        document.getElementById('btn-mode-instant').classList.add('active');
+        document.getElementById('btn-mode-assist').classList.add('active');
     }
 }
 
-// 💡 ステータスバー（UI）の表示更新
 function updateStatusBar() {
     document.getElementById('status-difficulty').innerText = currentDifficultyText;
     document.getElementById('status-miss').innerText = `ミス: ${missCount}`;
@@ -90,7 +83,6 @@ function updateStatusBar() {
     document.getElementById('status-score').innerText = `SCORE: ${gameScore}`;
 }
 
-// メニューからゲームを開始する時
 function handleMenuGenerate(difficulty) {
     currentDifficulty = difficulty;
     if (difficulty === 'easy') currentDifficultyText = "初級";
@@ -98,7 +90,6 @@ function handleMenuGenerate(difficulty) {
     if (difficulty === 'hard') currentDifficultyText = "上級";
     if (difficulty === 'expert') currentDifficultyText = "最高級";
 
-    // パラメータの完全初期化
     gameScore = 0;
     comboCount = 0;
     maxComboCount = 0;
@@ -112,10 +103,9 @@ function handleMenuGenerate(difficulty) {
     generateSudoku(difficulty);
     isPlayMode = true;
     showScreen('game-screen');
-    startTimer(); // タイマースタート
+    startTimer();
 }
 
-// 設定モーダルの開閉（ポーズ連動）
 function openSettingsModal() {
     if (isPlayMode) {
         gameActionsArea.style.display = 'flex';
@@ -137,13 +127,8 @@ function closeSettingsModal() {
     }
 }
 
-function resumeGame() {
-    closeSettingsModal();
-}
-
-function triggerSave() {
-    savePuzzleCustom();
-}
+function resumeGame() { closeSettingsModal(); }
+function triggerSave() { savePuzzleCustom(); }
 
 function triggerReset() {
     if (confirm("現在の問題を最初から解き直しますか？\n（タイム・スコア・コンボもリセットされます）")) {
@@ -183,7 +168,7 @@ function triggerQuit() {
     }
 }
 
-// 盤面グリッド初期構築
+// 盤面初期化
 for (let i = 0; i < 81; i++) {
     const cell = document.createElement('div');
     cell.classList.add('cell');
@@ -291,7 +276,6 @@ function generateSudoku(difficulty) {
     let solved = Array.from({ length: 9 }, () => Array(9).fill(0));
     solveSudokuRandomly(solved);
 
-    // 完成系の答えを内部記憶
     for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
             solvedBoard[r * 9 + c] = solved[r][c];
@@ -561,12 +545,10 @@ function launchConfetti() {
     }
 }
 
-// 💡 リアルタイムコンボ加点計算システム
 function calculateComboAddScore() {
     const config = difficultyConfig[currentDifficulty] || difficultyConfig['normal'];
     let base = config.base;
     
-    // コンボ倍率の判定
     let multiplier = 1.0;
     if (comboCount >= 15) multiplier = 2.0;
     else if (comboCount >= 10) multiplier = 1.5;
@@ -574,15 +556,39 @@ function calculateComboAddScore() {
     
     let scored = Math.floor(base * multiplier);
     
-    // クラシックモードならプレイ中スコアを一律1.3倍
-    if (judgeMode === 'classic') {
+    if (judgeMode === 'blind') {
         scored = Math.floor(scored * 1.3);
     }
     
     return scored;
 }
 
-// 💡 テンキー入力処理（新スコア＆新正誤判定＆消去連動）
+// 💡 【新機能】確定した数字の干渉線上にある他マスのメモを自動消去する関数
+function autoClearMemos(confirmedIndex, num) {
+    const targetCell = cellsArray[confirmedIndex];
+    const row = parseInt(targetCell.dataset.row);
+    const col = parseInt(targetCell.dataset.col);
+    const boxIdx = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+
+    // 縦・横・ブロックの全関連マスを重複なく統合
+    const relatedIndices = new Set([
+        ...rowIndices[row],
+        ...colIndices[col],
+        ...boxIndices[boxIdx]
+    ]);
+
+    relatedIndices.forEach(idx => {
+        if (idx !== confirmedIndex) {
+            const cell = cellsArray[idx];
+            // まだ数字が配置されておらず、かつ対象の数字のメモが残っている場合
+            if (getCellValue(cell) === "" && cell.memoValues[num] === true) {
+                cell.memoValues[num] = false;
+                renderMemo(cell); // メモ表示をリアルタイム更新
+            }
+        }
+    });
+}
+
 function pressMainNumber(num) {
     if (isPaused) return;
     if (!selectedCell || selectedCell.classList.contains('fixed')) return;
@@ -591,14 +597,12 @@ function pressMainNumber(num) {
     const index = parseInt(selectedCell.dataset.index);
     const currentVal = getCellValue(selectedCell);
 
-    // 💡【同じ数字を押したら消去】機能
     if (String(num) === currentVal) {
         setCellValue(selectedCell, "");
         selectedCell.classList.remove('user-input');
         selectedCell.memoValues = Array(10).fill(false);
         renderMemo(selectedCell);
         
-        // 消去時はミスではないがコンボは0リセット
         comboCount = 0;
         updateStatusBar();
         updateCounts();
@@ -606,16 +610,15 @@ function pressMainNumber(num) {
         return;
     }
 
-    const isNewFill = (currentVal === ""); // 空マスへの新規入力かどうか
+    const isNewFill = (currentVal === ""); 
 
-    // 💡 モード別正誤判定ロジック
-    if (judgeMode === 'instant') {
-        // パターン①：1手ごとに即判定モード
+    // モード別判定
+    if (judgeMode === 'assist') {
         const correctNum = solvedBoard[index];
         if (num !== correctNum) {
             errorText.innerText = "❌ 正解ではありません！";
             missCount++;
-            comboCount = 0; // 💡【仕様変更】スコアは減らさずコンボのみ0リセット
+            comboCount = 0; 
             updateStatusBar();
             
             selectedCell.classList.add('invalid-flash');
@@ -623,17 +626,15 @@ function pressMainNumber(num) {
             return;
         }
         
-        // 正解ならコンボ加点
         comboCount++;
         maxComboCount = Math.max(maxComboCount, comboCount);
         gameScore += calculateComboAddScore();
         
     } else {
-        // パターン②：最後まで秘密（クラシック）モード
         if (!isValidMove(selectedCell, num)) {
             errorText.innerText = "!! 数字が重複しています";
             missCount++;
-            comboCount = 0; // 重複エラーはコンボ0リセット
+            comboCount = 0; 
             updateStatusBar();
 
             selectedCell.classList.add('invalid-flash');
@@ -641,38 +642,36 @@ function pressMainNumber(num) {
             return;
         }
         
-        // 重複なしで、かつ「新しい空マスを埋めた時」のみコンボを繋ぐ（無限スコア稼ぎ防止）
         if (isNewFill) {
             comboCount++;
             maxComboCount = Math.max(maxComboCount, comboCount);
             gameScore += calculateComboAddScore();
         } else {
-            // すでに入っているマスの上書き時はコンボは切れる（慎重さを求めるため）
             comboCount = 0;
         }
     }
 
-    // 盤面に数字をセット
     selectedCell.memoValues = Array(10).fill(false);
     renderMemo(selectedCell);
     setCellValue(selectedCell, num);
     selectedCell.classList.add('user-input');
+
+    // 💡【新機能発動】入力が成功したため、周辺マスの干渉するメモを自動消去
+    autoClearMemos(index, num);
+
     updateStatusBar();
         
-    // 💡 全て埋まった場合のクリア判定
     if (checkGameClear()) {
-        if (judgeMode === 'classic') {
-            // クラシックモード時はここで初めて全体の答え合わせ
+        if (judgeMode === 'blind') {
             if (checkFinalAnswer()) {
                 triggerClearSuccess();
             } else {
                 errorText.innerText = "⚠️ 盤面が埋まりましたが、どこかに間違いがあります！";
-                comboCount = 0; // 間違いが発覚した時点でコンボ終了
-                isFirstTimePerfect = false; // 一発正解ボーナス喪失
+                comboCount = 0; 
+                isFirstTimePerfect = false; 
                 updateStatusBar();
             }
         } else {
-            // 即時判定モードは埋まった時点で全マス正解確定
             triggerClearSuccess();
         }
     }
@@ -680,7 +679,6 @@ function pressMainNumber(num) {
     if (selectedCell) getHighlightTargetAndTrigger(selectedCell); 
 }
 
-// 全マスが正解配列と完全一致しているかスキャン
 function checkFinalAnswer() {
     for (let i = 0; i < 81; i++) {
         if (parseInt(getCellValue(cellsArray[i])) !== solvedBoard[i]) {
@@ -690,38 +688,33 @@ function checkFinalAnswer() {
     return true;
 }
 
-// 💡 総合スコア集計＆美的なリザルト表示処理
 function triggerClearSuccess() {
-    stopTimer(); // タイマー停止
+    stopTimer(); 
     if (selectedCell) selectedCell.classList.remove('selected');
     selectedCell = null;
     clearAllHighlights();
 
-    // タイムボーナスの計算
     const config = difficultyConfig[currentDifficulty] || difficultyConfig['normal'];
     const targetTime = config.targetTime;
-    const rate = (judgeMode === 'classic') ? config.rateClassic : config.rateInstant;
+    const rate = (judgeMode === 'blind') ? config.rateClassic : config.rateInstant;
     
     let timeBonus = 0;
     if (elapsedTime < targetTime) {
         timeBonus = (targetTime - elapsedTime) * rate;
     }
 
-    // クラシック限定：一発ノーミスボーナス
     let perfectBonus = 0;
-    if (judgeMode === 'classic' && isFirstTimePerfect) {
+    if (judgeMode === 'blind' && isFirstTimePerfect) {
         perfectBonus = 1000;
     }
 
-    // 最終総合スコア
     const finalTotalScore = gameScore + timeBonus + perfectBonus;
 
     setTimeout(() => { 
-        // リザルト画面の内訳をテーブル形式で生成
         document.querySelector('.clear-msg').innerHTML = `
             素晴らしいロジックでした！スコアの内訳です。<br><br>
             <table class="result-table">
-                <tr><td>モード</td><td class="val">${judgeMode === 'classic' ? '最後まで秘密' : '1手ごとに即判定'}</td></tr>
+                <tr><td>モード</td><td class="val">${judgeMode === 'blind' ? 'ブラインド' : 'アシスト'}</td></tr>
                 <tr><td>クリアタイム</td><td class="val">${Math.floor(elapsedTime / 60)}分 ${elapsedTime % 60}秒</td></tr>
                 <tr><td>最高コンボ数</td><td class="val">${maxComboCount} 連続</td></tr>
                 <tr><td>ミス回数</td><td class="val">${missCount} 回</td></tr>
