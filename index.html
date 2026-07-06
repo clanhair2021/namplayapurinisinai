@@ -5,10 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>美容室CLanからの挑戦状</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .btn-hint {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-top: 6px;
+            text-align: center;
+        }
+        .btn-hint:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+    </style>
 </head>
 <body>
 
-    <!-- メニュー画面 -->
     <div id="menu-screen" class="screen-container">
         <button class="btn-settings" onclick="openSettingsModal()">⚙</button>
         <h1 class="menu-title">美容室CLan<br>からの挑戦状</h1>
@@ -21,7 +40,6 @@
         <button class="btn-menu-load-trigger" onclick="openLoadModal()">保存したステージから読込</button>
     </div>
 
-    <!-- ゲーム画面 -->
     <div id="game-screen" class="screen-container" style="display: none;">
         <button class="btn-settings" onclick="openSettingsModal()">⚙</button>
         
@@ -45,9 +63,10 @@
             </div>
         </div>
 
+        <button class="btn-hint" onclick="triggerHint()">💡 ヒントを1つもらう</button>
+
         <div class="error-message" id="error-text"></div>
 
-        <!-- キーパッド -->
         <div class="keypad-container" id="num-pad-area">
             <div class="memo-pad">
                 <div class="pad-title">MEMO</div>
@@ -77,12 +96,11 @@
         </div>
     </div>
 
-    <!-- 設定モーダル -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-title">SETTINGS</div>
 
-            <div class="setting-item">
+            <div class="setting-item" id="setting-item-mode">
                 <div class="setting-label">プレイモード</div>
                 <div class="mode-select-buttons">
                     <button id="btn-mode-blind" class="btn-setting-action active" onclick="setJudgeMode('blind')">ブラインド</button>
@@ -110,7 +128,6 @@
         </div>
     </div>
 
-    <!-- 読込用モーダル -->
     <div class="modal-overlay" id="load-modal">
         <div class="modal-content">
             <div class="modal-title">SAVE DATA</div>
@@ -119,7 +136,6 @@
         </div>
     </div>
 
-    <!-- クリア画面 -->
     <div class="clear-overlay" id="clear-screen">
         <div class="clear-content">
             <div class="clear-title">CLEAR!</div>
