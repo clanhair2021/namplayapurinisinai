@@ -504,13 +504,14 @@ function pressMemoNumber(num) {
     getHighlightTargetAndTrigger(selectedCell);
 }
 
-function clearMemo() {
-    if (isPaused) return;
-    if (!selectedCell || selectedCell.classList.contains('fixed')) return;
-    if (getCellValue(selectedCell) !== "") return;
-    selectedCell.memoValues = Array(10).fill(false);
-    renderMemo(selectedCell);
-    getHighlightTargetAndTrigger(selectedCell);
+function clearAllHighlights() {
+    if (selectedCell) selectedCell.classList.remove('selected');
+    selectedCell = null;
+    cellsArray.forEach(cell => {
+        cell.classList.remove('same-number', 'highlight-cross');
+        const mg = cell.querySelector('.memo-grid');
+        if(mg) mg.querySelectorAll('.memo-digit').forEach(d => d.classList.remove('highlight-memo'));
+    });
 }
 
 function updateCounts() {
@@ -542,14 +543,5 @@ function checkGameClear() {
 
 function closeClearScreen() { clearScreen.style.display = 'none'; }
 
-function clearAllHighlights() {
-    if (selectedCell) selectedCell.classList.remove('selected');
-    selectedCell = null;
-    cellsArray.forEach(cell => {
-        cell.classList.remove('same-number', 'highlight-cross');
-        const mg = cell.querySelector('.memo-grid');
-        if(mg) mg.querySelectorAll('.memo-digit').forEach(d => d.classList.remove('highlight-memo'));
-    });
-}
-
 updateCounts();
+
