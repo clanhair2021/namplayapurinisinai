@@ -14,7 +14,7 @@ let isPaused = false;
 const cellsArray = [];
 
 let solvedBoard = Array(81).fill(0); 
-let judgeMode = 'blind';             // 💡 'blind'(ブラインド) または 'assist'(アシスト)
+let judgeMode = 'blind';             // Default: 'blind' or 'assist'
 let currentDifficulty = 'normal';   
 let currentDifficultyText = "中級";
 
@@ -63,16 +63,21 @@ function updateTimerDisplay() {
     document.getElementById('status-timer').innerText = `⏱ ${m}:${s}`;
 }
 
-// 💡 モード切替UIのアップデート
+// 💡 モード切替UIのアップデート関数
 function setJudgeMode(mode) {
     judgeMode = mode;
-    document.getElementById('btn-mode-blind').classList.remove('active');
-    document.getElementById('btn-mode-assist').classList.remove('active');
+    const btnBlind = document.getElementById('btn-mode-blind');
+    const btnAssist = document.getElementById('btn-mode-assist');
     
-    if (mode === 'blind') {
-        document.getElementById('btn-mode-blind').classList.add('active');
-    } else {
-        document.getElementById('btn-mode-assist').classList.add('active');
+    if (btnBlind && btnAssist) {
+        btnBlind.classList.remove('active');
+        btnAssist.classList.remove('active');
+        
+        if (mode === 'blind') {
+            btnBlind.classList.add('active');
+        } else {
+            btnAssist.classList.add('active');
+        }
     }
 }
 
@@ -106,7 +111,10 @@ function handleMenuGenerate(difficulty) {
     startTimer();
 }
 
+// 💡 修正点：設定画面を開いた瞬間に現在のモードをボタンに同期させる
 function openSettingsModal() {
+    setJudgeMode(judgeMode); // 現在の選択状態（内部変数）をUIのボタンに100%同期
+
     if (isPlayMode) {
         gameActionsArea.style.display = 'flex';
         isPaused = true;
@@ -563,14 +571,13 @@ function calculateComboAddScore() {
     return scored;
 }
 
-// 💡 【新機能】確定した数字の干渉線上にある他マスのメモを自動消去する関数
+// 💡 メモ自動消去ロジック（干渉するマスからメモを消す）
 function autoClearMemos(confirmedIndex, num) {
     const targetCell = cellsArray[confirmedIndex];
     const row = parseInt(targetCell.dataset.row);
     const col = parseInt(targetCell.dataset.col);
     const boxIdx = Math.floor(row / 3) * 3 + Math.floor(col / 3);
 
-    // 縦・横・ブロックの全関連マスを重複なく統合
     const relatedIndices = new Set([
         ...rowIndices[row],
         ...colIndices[col],
@@ -580,10 +587,9 @@ function autoClearMemos(confirmedIndex, num) {
     relatedIndices.forEach(idx => {
         if (idx !== confirmedIndex) {
             const cell = cellsArray[idx];
-            // まだ数字が配置されておらず、かつ対象の数字のメモが残っている場合
             if (getCellValue(cell) === "" && cell.memoValues[num] === true) {
                 cell.memoValues[num] = false;
-                renderMemo(cell); // メモ表示をリアルタイム更新
+                renderMemo(cell); 
             }
         }
     });
@@ -612,7 +618,7 @@ function pressMainNumber(num) {
 
     const isNewFill = (currentVal === ""); 
 
-    // モード別判定
+    // モード判定
     if (judgeMode === 'assist') {
         const correctNum = solvedBoard[index];
         if (num !== correctNum) {
@@ -656,7 +662,7 @@ function pressMainNumber(num) {
     setCellValue(selectedCell, num);
     selectedCell.classList.add('user-input');
 
-    // 💡【新機能発動】入力が成功したため、周辺マスの干渉するメモを自動消去
+    // 周辺マスの干渉メモを自動消去
     autoClearMemos(index, num);
 
     updateStatusBar();
