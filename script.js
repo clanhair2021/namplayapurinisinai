@@ -1,45 +1,110 @@
 const grid = document.getElementById('sudoku-grid');
 const errorText = document.getElementById('error-text');
-const timerDisplay = document.getElementById('timer-display');
-const btnPause = document.getElementById('btn-pause');
-const pauseScreen = document.getElementById('pause-screen');
 const numPadArea = document.getElementById('num-pad-area');
-const btnReset = document.getElementById('btn-reset');
-const btnClear = document.getElementById('btn-clear');
-const btnToMenu = document.getElementById('btn-to-menu');
+const pauseScreen = document.getElementById('pause-screen');
 const clearScreen = document.getElementById('clear-screen');
-const finalTimeSpan = document.getElementById('final-time');
 const loadModal = document.getElementById('load-modal');
 const modalSaveList = document.getElementById('modal-save-list');
+const settingsModal = document.getElementById('settings-modal');
+const gameActionsArea = document.getElementById('game-actions-area');
 
 let selectedCell = null;
 let isPlayMode = false;
 let isPaused = false;
 const cellsArray = [];
 
-let startTime = 0;
-let elapsedTime = 0;
-let timerInterval = null;
-
-// 画面を切り替える新機能
+// 画面切り替えシステム
 function showScreen(screenId) {
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'none';
     document.getElementById(screenId).style.display = 'flex';
 }
 
-// メニューから難易度を選んだときの処理
+// メニューで難易度を選択した時
 function handleMenuGenerate(difficulty) {
-    isPlayMode = false; // 一旦リセットして生成できるようにする
     generateSudoku(difficulty);
-    
-    // 自動生成が完了したらゲーム画面を立ち上げてスタート
     isPlayMode = true;
-    startTimer();
     showScreen('game-screen');
 }
 
-// 盤面のマス作成
+// 明るさ調整（ライト/ダーク切り替え）
+function setBrightness(mode) {
+    const lightBtn = document.getElementById('mode-light-btn');
+    const darkBtn = document.getElementById('mode-dark-btn');
+    
+    if (mode === 'dark') {
+        document.body.classList.add('dark-mode');
+        darkBtn.classList.add('active');
+        lightBtn.classList.remove('active');
+    } else {
+        document.body.classList.remove('dark-mode');
+        lightBtn.classList.add('active');
+        darkBtn.classList.remove('active');
+    }
+}
+
+// 設定モーダルの開閉
+function openSettingsModal() {
+    if (isPlayMode) {
+        gameActionsArea.style.display = 'flex';
+        isPaused = true;
+        pauseScreen.style.display = "flex";
+        numPadArea.style.opacity = "0.15";
+    } else {
+        gameActionsArea.style.display = 'none';
+    }
+    settingsModal.style.display = 'flex';
+}
+
+function closeSettingsModal() {
+    settingsModal.style.display = 'none';
+    if (isPlayMode) {
+        isPaused = false;
+        pauseScreen.style.display = "none";
+        numPadArea.style.opacity = "1";
+    }
+}
+
+// ポーズ（一時停止）画面からの復帰
+function resumeGame() {
+    closeSettingsModal();
+}
+
+// モーダル内からの各種アクション実行
+function triggerSave() {
+    savePuzzleCustom();
+}
+
+function triggerReset() {
+    if (confirm("現在の問題を最初から解き直しますか？")) {
+        cellsArray.forEach(cell => {
+            if (!cell.classList.contains('fixed')) {
+                setCellValue(cell, "");
+                cell.classList.remove('user-input');
+                cell.memoValues = Array(10).fill(false);
+                renderMemo(cell);
+            }
+        });
+        errorText.innerText = "";
+        clearAllHighlights();
+        updateCounts();
+        closeSettingsModal();
+    }
+}
+
+function triggerQuit() {
+    if (confirm("ゲームを終了してメニューに戻りますか？\n（現在の進行状況は破棄されます）")) {
+        isPlayMode = false;
+        isPaused = false;
+        pauseScreen.style.display = "none";
+        numPadArea.style.opacity = "1";
+        clearAllHighlights();
+        showScreen('menu-screen');
+        closeSettingsModal();
+    }
+}
+
+// 盤面生成
 for (let i = 0; i < 81; i++) {
     const cell = document.createElement('div');
     cell.classList.add('cell');
@@ -182,12 +247,11 @@ function generateSudoku(difficulty) {
 
     errorText.innerText = "";
     clearAllHighlights();
-    resetTimer();
     updateCounts();
 }
 
 function savePuzzleCustom() {
-    const saveName = prompt("この問題につける名前を入力してください：");
+    const saveName = prompt("この【問題】につける名前を入力してください：");
     if (saveName === null) return; 
     const trimmedName = saveName.trim();
     if (trimmedName === "") {
@@ -196,10 +260,11 @@ function savePuzzleCustom() {
     }
 
     const puzzleData = cellsArray.map(cell => {
+        const isFixed = cell.classList.contains('fixed');
         return {
-            isFixed: cell.classList.contains('fixed'),
-            text: getCellValue(cell),
-            memos: cell.memoValues
+            isFixed: isFixed,
+            text: isFixed ? getCellValue(cell) : "",
+            memos: Array(10).fill(false)
         };
     });
 
@@ -207,7 +272,7 @@ function savePuzzleCustom() {
         let customSaves = JSON.parse(localStorage.getItem('sudoku_studio_custom_saves') || '{}');
         customSaves[trimmedName] = puzzleData;
         localStorage.setItem('sudoku_studio_custom_saves', JSON.stringify(customSaves));
-        alert(`[${trimmedName}] 保存しました`);
+        alert(`問題 [${trimmedName}] をお気に入り保存しました！`);
     } catch (e) {
         alert("保存に失敗しました");
     }
@@ -264,24 +329,22 @@ function loadPuzzleCustom(name) {
         setCellValue(cell, data.text || "");
         cell.memoValues = data.memos || Array(10).fill(false);
         cell.classList.remove('fixed', 'user-input');
-        if (data.isFixed) cell.classList.add('fixed');
+        if (data.isFixed && data.text !== "") {
+            cell.classList.add('fixed');
+        }
         renderMemo(cell);
     });
 
     errorText.innerText = "";
     clearAllHighlights();
     
-    // データを読み込んだら自動でプレイ画面へ遷移して開始
     isPlayMode = true;
     isPaused = false;
     pauseScreen.style.display = "none";
     numPadArea.style.opacity = "1";
-    btnPause.style.display = "inline-block";
-    resetTimer();
-    startTimer();
+    
     updateCounts();
     closeLoadModal();
-    
     showScreen('game-screen');
 }
 
@@ -426,13 +489,9 @@ function pressMainNumber(num) {
     selectedCell.classList.add('user-input');
         
     if (checkGameClear()) {
-        stopTimer();
         if (selectedCell) selectedCell.classList.remove('selected');
         selectedCell = null;
         clearAllHighlights();
-        const timeText = timerDisplay.innerText;
-        finalTimeSpan.innerText = timeText;
-        
         setTimeout(() => { 
             clearScreen.style.display = 'flex'; 
             launchConfetti();
@@ -495,36 +554,7 @@ function checkGameClear() {
     return true;
 }
 
-function startTimer() {
-    startTime = Date.now() - elapsedTime;
-    timerInterval = setInterval(() => {
-        elapsedTime = Date.now() - startTime;
-        const totalSeconds = Math.floor(elapsedTime / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        timerDisplay.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }, 1000);
-}
-
-function stopTimer() { clearInterval(timerInterval); }
-function resetTimer() { clearInterval(timerInterval); elapsedTime = 0; timerDisplay.innerText = "00:00"; }
 function closeClearScreen() { clearScreen.style.display = 'none'; }
-
-function pauseGame() {
-    if (isPaused) return;
-    isPaused = true;
-    stopTimer();
-    pauseScreen.style.display = "flex";
-    numPadArea.style.opacity = "0.15";
-}
-
-function resumeGame() {
-    if (!isPaused) return;
-    isPaused = false;
-    startTimer();
-    pauseScreen.style.display = "none";
-    numPadArea.style.opacity = "1";
-}
 
 function clearAllHighlights() {
     if (selectedCell) selectedCell.classList.remove('selected');
@@ -535,57 +565,5 @@ function clearAllHighlights() {
         if(mg) mg.querySelectorAll('.memo-digit').forEach(d => d.classList.remove('highlight-memo'));
     });
 }
-
-// ゲーム画面からメニューに戻るボタンの挙動
-btnToMenu.addEventListener('click', () => {
-    if (!isPaused && elapsedTime > 0) {
-        if (!confirm("ゲームを中断してメニューに戻りますか？\n(進行状況はリセットされます)")) {
-            return;
-        }
-    }
-    stopTimer();
-    resetTimer();
-    isPlayMode = false;
-    showScreen('menu-screen');
-});
-
-btnReset.addEventListener('click', () => {
-    if (confirm("現在の問題を最初から解き直しますか？")) {
-        cellsArray.forEach(cell => {
-            if (!cell.classList.contains('fixed')) {
-                setCellValue(cell, "");
-                cell.classList.remove('user-input');
-                cell.memoValues = Array(10).fill(false);
-                renderMemo(cell);
-            }
-        });
-        errorText.innerText = "";
-        clearAllHighlights();
-        resetTimer(); 
-        startTimer();
-        updateCounts();
-    }
-});
-
-btnClear.addEventListener('click', () => {
-    if (confirm("ゲームを終了し、盤面をクリアしてメニューに戻りますか？")) {
-        cellsArray.forEach(cell => {
-            setCellValue(cell, "");
-            cell.classList.remove('fixed', 'user-input');
-            cell.memoValues = Array(10).fill(false);
-            renderMemo(cell);
-        });
-        errorText.innerText = "";
-        clearAllHighlights();
-        stopTimer();
-        resetTimer();
-        isPlayMode = false;
-        isPaused = false;
-        pauseScreen.style.display = "none";
-        numPadArea.style.opacity = "1";
-        updateCounts();
-        showScreen('menu-screen'); // メニューに戻す
-    }
-});
 
 updateCounts();
