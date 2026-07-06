@@ -70,14 +70,6 @@
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-title">SETTINGS</div>
-            
-            <div class="setting-item">
-                <div class="setting-label">明るさ調整</div>
-                <div class="setting-controls">
-                    <button class="btn-setting-action active" id="mode-light-btn" onclick="setBrightness('light')">ライト</button>
-                    <button class="btn-setting-action" id="mode-dark-btn" onclick="setBrightness('dark')">ダーク</button>
-                </div>
-            </div>
 
             <div class="setting-item">
                 <div class="setting-label">テーマカラー（準備中）</div>
@@ -92,7 +84,7 @@
             <div id="game-actions-area" style="display: none; border-top: 1px solid var(--border); margin-top: 15px; padding-top: 15px; flex-direction: column; gap: 8px;">
                 <button class="btn-setting-action" style="border-color: var(--primary); color: var(--primary);" onclick="triggerSave()">この問題を保存する</button>
                 <button class="btn-setting-action" onclick="triggerReset()">最初から解き直す</button>
-                <button class="btn-setting-action" style="border-color: var(--error); color: var(--error);" onclick="triggerQuit()">メニューに戻る</button>
+                <button class="btn-setting-action" style="border-color: var(--error); color: var(--error);" onclick="triggerQuit()">ギブアップ</button>
             </div>
 
             <button class="btn-modal-close" onclick="closeSettingsModal()">閉じる</button>
