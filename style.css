@@ -33,9 +33,12 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-body {
-    /* ✨ ここで読み込んだフォントを適用しています */
+/* ✨ ここを修正：bodyだけでなく、buttonなどの入力要素にもフォントを強制適用 */
+body, button, input, select, textarea {
     font-family: 'NosutaruDot', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
     background: var(--bg-gradient);
     color: var(--text-main);
     min-height: 100vh;
