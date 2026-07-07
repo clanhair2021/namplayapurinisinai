@@ -1,4 +1,14 @@
 /* =======================================================
+   🔤 カスタムフォントの読み込み
+   ======================================================= */
+@font-face {
+    font-family: 'NosutaruDot';
+    src: url('./Nosutaru-dotMPlusH-10-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* =======================================================
    🎨 共通変数・基本設定
    ======================================================= */
 :root {
@@ -24,7 +34,8 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* ✨ ここで読み込んだフォントを適用しています */
+    font-family: 'NosutaruDot', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background: var(--bg-gradient);
     color: var(--text-main);
     min-height: 100vh;
@@ -240,7 +251,7 @@ body {
     flex-direction: row !important;
     gap: 8px;
     width: 100%;
-    align-items: stretch; /* 左右の高さをピタッと揃える */
+    align-items: stretch;
     transition: opacity 0.2s;
 }
 
@@ -283,7 +294,7 @@ body {
 /* ヒントボタン（左下の隙間をピッタリ埋める） */
 .btn-hint {
     width: 100%;
-    flex: 1; /* 空いた空間を埋める */
+    flex: 1;
     background: var(--white);
     border: 1px solid var(--primary);
     color: var(--primary);
@@ -315,7 +326,7 @@ body {
     z-index: 10;
 }
 
-/* キーボタンの共通スタイル（Gridアイテムとして最適化） */
+/* キーボタンの共通スタイル */
 .btn-memo-num, .num-btn {
     width: 100%;
     height: 100%;
