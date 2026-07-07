@@ -32,20 +32,18 @@ body {
     justify-content: center;
     align-items: center;
     padding: 10px;
-    box-shadow: none !important; /* ボディの余計な影をリセット */
 }
 
 /* =======================================================
-   ✨ 【修正】全面一体化デザイン（大外の枠・影・背景を完全に除去）
+   ✨ 全面一体化デザイン（大外の枠・影・背景を完全に除去）
    ======================================================= */
 .screen-container, .container {
     width: 100% !important;
     max-width: 100% !important;
-    background: transparent !important;       /* 白い背景ボックスを透明に */
-    background-color: transparent !important;
-    border: none !important;                  /* 外枠の線を完全に消去 */
-    box-shadow: none !important;              /* 外枠の影を完全に消去 */
-    padding: 10px !important;                 /* 画面端の適切な余白 */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px !important;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -226,7 +224,7 @@ body {
 }
 
 /* =======================================================
-   💡 【追加】ヒントボタンのスタイル
+   💡 ヒントボタンのスタイル
    ======================================================= */
 .btn-hint {
     width: 100%;
@@ -260,41 +258,51 @@ body {
 }
 
 /* =======================================================
-   ⌨️ キーパッド（メモ入力 ＆ 通常入力）
+   ⌨️ キーパッド（左メモ・右テンキー：3x3完全統合デザイン）
    ======================================================= */
 .keypad-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: row !important; /* 縦積み(column)から横並び(row)に一元化 */
+    gap: 8px;
     width: 100%;
+    align-items: flex-start;
     transition: opacity 0.2s;
 }
 
+/* メモパッド（左）とメインパッド（右）共通の3x3正方形グリッド構造 */
 .memo-pad, .main-pad {
     background: rgba(255, 255, 255, 0.5);
-    padding: 8px;
+    padding: 6px;
     border-radius: var(--radius);
-    display: flex;
-    gap: 6px;
+    display: grid !important;                  /* Gridレイアウトに統一 */
+    grid-template-columns: repeat(3, 1fr);    /* 3列配置 */
+    grid-template-rows: repeat(3, 1fr);       /* 3行配置 */
+    gap: 4px;
     position: relative;
+    aspect-ratio: 1 / 1;                      /* 常に綺麗な正方形を維持 */
 }
+
+.memo-pad { flex: 2; } /* 左側：ややコンパクトに */
+.main-pad { flex: 3; } /* 右側：テンキーを主役に少し大きく表示 */
 
 .pad-title {
     position: absolute;
-    top: -8px;
+    top: -10px;
     left: 8px;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 800;
     background: var(--text-muted);
     color: var(--white);
     padding: 1px 5px;
     border-radius: 3px;
+    z-index: 10;
 }
 
+/* キーボタンの共通スタイル（Gridアイテムとして最適化） */
 .btn-memo-num, .num-btn {
-    flex: 1;
-    aspect-ratio: 1 / 1;
-    border-radius: 6px;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
@@ -305,25 +313,25 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* メモボタン */
+/* メモボタン独自スタイル */
 .btn-memo-num {
     background: #edf2f7;
     border: 1px solid var(--border);
     color: var(--text-muted);
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 .btn-memo-num:active { background: #cbd5e0; }
 
-/* 通常入力ボタン */
+/* 通常入力ボタン独自スタイル */
 .num-btn {
     background: var(--white);
     border: 1px solid var(--primary);
     color: var(--primary);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 .num-btn:active { background: var(--primary-light); }
 
-/* 9枚使い切った数字ボタンのグレーアウトスタリング */
+/* 9枚使い切った数字ボタンのグレーアウト */
 .num-btn.completed {
     background: #e2e8f0 !important;
     border-color: #cbd5e0 !important;
@@ -332,7 +340,7 @@ body {
 
 /* 残り枚数カウンター(0/9など) */
 .num-count {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     font-weight: 600;
     color: var(--text-muted);
     margin-top: 1px;
