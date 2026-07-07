@@ -223,31 +223,6 @@ body {
     border-radius: 2px;
 }
 
-/* =======================================================
-   💡 ヒントボタンのスタイル
-   ======================================================= */
-.btn-hint {
-    width: 100%;
-    background: var(--white);
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    padding: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    margin-top: 6px;
-    text-align: center;
-    box-sizing: border-box;
-    box-shadow: var(--shadow);
-}
-
-.btn-hint:hover {
-    background: var(--primary);
-    color: var(--white);
-}
-
 /* エラー・警告テキスト表示エリア */
 .error-message {
     font-size: 0.85rem;
@@ -258,32 +233,74 @@ body {
 }
 
 /* =======================================================
-   ⌨️ キーパッド（左メモ・右テンキー：3x3完全統合デザイン）
+   ⌨️ キーパッド（左：メモ＆ヒント / 右：テンキー）
    ======================================================= */
 .keypad-container {
     display: flex !important;
-    flex-direction: row !important; /* 縦積み(column)から横並び(row)に一元化 */
+    flex-direction: row !important;
     gap: 8px;
     width: 100%;
-    align-items: flex-start;
+    align-items: stretch; /* 左右の高さをピタッと揃える */
     transition: opacity 0.2s;
 }
 
-/* メモパッド（左）とメインパッド（右）共通の3x3正方形グリッド構造 */
-.memo-pad, .main-pad {
+/* 左側エリア（メモとヒントボタンを縦に並べる） */
+.left-pad-area {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 右側エリア（テンキー：主役なので大きめ） */
+.main-pad {
+    flex: 3;
     background: rgba(255, 255, 255, 0.5);
     padding: 6px;
     border-radius: var(--radius);
-    display: grid !important;                  /* Gridレイアウトに統一 */
-    grid-template-columns: repeat(3, 1fr);    /* 3列配置 */
-    grid-template-rows: repeat(3, 1fr);       /* 3行配置 */
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
     gap: 4px;
     position: relative;
-    aspect-ratio: 1 / 1;                      /* 常に綺麗な正方形を維持 */
+    aspect-ratio: 1 / 1;
 }
 
-.memo-pad { flex: 2; } /* 左側：ややコンパクトに */
-.main-pad { flex: 3; } /* 右側：テンキーを主役に少し大きく表示 */
+/* メモパッド */
+.memo-pad {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 6px;
+    border-radius: var(--radius);
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    position: relative;
+    aspect-ratio: 1 / 1;
+}
+
+/* ヒントボタン（左下の隙間をピッタリ埋める） */
+.btn-hint {
+    width: 100%;
+    flex: 1; /* 空いた空間を埋める */
+    background: var(--white);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-hint:hover, .btn-hint:active {
+    background: var(--primary);
+    color: var(--white);
+}
 
 .pad-title {
     position: absolute;
