@@ -27,6 +27,9 @@ let isFirstTimePerfect = true;
 let timerInterval = null;           
 let elapsedTime = 0;                
 
+// フリック操作時のクリック誤爆を防ぐためのフラグ
+let justFlicked = false;
+
 const difficultyConfig = {
     easy: { base: 10, targetTime: 300, rateInstant: 2, rateClassic: 4 },
     normal: { base: 20, targetTime: 600, rateInstant: 3, rateClassic: 5 },
@@ -110,20 +113,19 @@ function handleMenuGenerate(difficulty) {
     startTimer();
 }
 
-// 💡 修正点：ゲーム中（盤面のある画面）ならモード選択項目を非表示にする
 function openSettingsModal() {
     setJudgeMode(judgeMode); 
 
     const modeSettingItem = document.getElementById('setting-item-mode');
 
     if (isPlayMode) {
-        if (modeSettingItem) modeSettingItem.style.display = 'none'; // ゲーム中はモード選択を隠す
+        if (modeSettingItem) modeSettingItem.style.display = 'none';
         gameActionsArea.style.display = 'flex';
         isPaused = true;
         pauseScreen.style.display = "flex";
         numPadArea.style.opacity = "0.15";
     } else {
-        if (modeSettingItem) modeSettingItem.style.display = 'flex'; // メニュー画面ならモード選択を出す
+        if (modeSettingItem) modeSettingItem.style.display = 'flex';
         gameActionsArea.style.display = 'none';
     }
     settingsModal.style.display = 'flex';
@@ -597,45 +599,38 @@ function autoClearMemos(confirmedIndex, num) {
     });
 }
 
-// 💡 【新機能】ヒントボタンが押された時のロジック
 function triggerHint() {
     if (!isPlayMode || isPaused) return;
     errorText.innerText = "";
 
     let targetCell = selectedCell;
 
-    // マスが未選択、または固定マスの場合は、まだ正解が埋まっていない空欄からランダムに自動選出
     if (!targetCell || targetCell.classList.contains('fixed')) {
         const candidates = cellsArray.filter(cell => {
             if (cell.classList.contains('fixed')) return false;
             const val = getCellValue(cell);
             const idx = parseInt(cell.dataset.index);
-            // 空欄か、もしくは間違った数字が入っているマスを候補にする
             return val === "" || parseInt(val) !== solvedBoard[idx];
         });
 
-        if (candidates.length === 0) return; // すべて完成しているなら終了
+        if (candidates.length === 0) return; 
         targetCell = candidates[Math.floor(Math.random() * candidates.length)];
     }
 
     const index = parseInt(targetCell.dataset.index);
     const correctNum = solvedBoard[index];
 
-    // どこが埋まったか分かりやすくするため、ヒント対象マスに選択を移動
     if (selectedCell) selectedCell.classList.remove('selected');
     selectedCell = targetCell;
     targetCell.classList.add('selected');
 
-    // 正解の数字を強制的に確定
     targetCell.memoValues = Array(10).fill(false);
     renderMemo(targetCell);
     setCellValue(targetCell, correctNum);
     targetCell.classList.add('user-input');
 
-    // 確定したため周辺マスの干渉メモを自動消去（連動発動）
     autoClearMemos(index, correctNum);
 
-    // ヒントを使用したためコンボはリセット
     comboCount = 0;
     errorText.innerText = "💡 ヒントでマスを1つ埋めました！";
     
@@ -643,7 +638,6 @@ function triggerHint() {
     updateCounts();
     getHighlightTargetAndTrigger(targetCell);
 
-    // クリアチェック
     if (checkGameClear()) {
         if (judgeMode === 'blind') {
             if (checkFinalAnswer()) {
@@ -661,6 +655,7 @@ function triggerHint() {
 
 function pressMainNumber(num) {
     if (isPaused) return;
+    if (justFlicked) return; // フリック消去直後は通常の数字入力をキャンセルする
     if (!selectedCell || selectedCell.classList.contains('fixed')) return;
     errorText.innerText = "";
 
@@ -836,10 +831,10 @@ function updateCounts() {
         const btnEl = document.getElementById(`btn-num-${num}`);
         if (counts[num] === 9) {
             if(countEl) countEl.innerText = `9/9`;
-            btnEl.classList.add('completed');
+            if(btnEl) btnEl.classList.add('completed');
         } else {
             if(countEl) countEl.innerText = `${counts[num]}/9`;
-            btnEl.classList.remove('completed');
+            if(btnEl) btnEl.classList.remove('completed');
         }
     }
 }
@@ -853,4 +848,163 @@ function checkGameClear() {
 
 function closeClearScreen() { clearScreen.style.display = 'none'; }
 
+
+// =========================================================================
+// 💡 フリック入力（スワイプ消去）機能のセットアップ
+// =========================================================================
+function setupFlickToDelete() {
+    const numBtns = document.querySelectorAll('.num-btn');
+    
+    numBtns.forEach(btn => {
+        btn.style.position = 'relative'; // アイコン表示のための基準位置
+        let startY = 0;
+        let isFlicking = false;
+        let indicator = null;
+
+        // タッチ開始（指を置いた瞬間）
+        btn.addEventListener('touchstart', (e) => {
+            if (isPaused) return;
+            startY = e.touches[0].clientY;
+            isFlicking = false;
+            showIndicator(btn);
+        }, {passive: true});
+
+        // タッチ移動（指を滑らせている最中）
+        btn.addEventListener('touchmove', (e) => {
+            if (!startY || isPaused) return;
+            let currentY = e.touches[0].clientY;
+            
+            // 15px以上 上にフリックしたら「消去モード」と判定
+            if (startY - currentY > 15) { 
+                isFlicking = true;
+                activateIndicator();
+                if (e.cancelable) e.preventDefault(); // フリック中の画面スクロールを防ぐ
+            } else {
+                isFlicking = false;
+                resetIndicator();
+            }
+        }, {passive: false});
+
+        // タッチ終了（指を離した瞬間）
+        btn.addEventListener('touchend', (e) => {
+            if (isPaused) return;
+            removeIndicator();
+            
+            if (isFlicking) {
+                if (e.cancelable) e.preventDefault(); // 通常のクリック判定をブロック
+                executeDeleteCell();
+            }
+            startY = 0;
+        });
+
+        // 【PC・マウス操作用の予備ロジック】
+        let isMouseDown = false;
+        btn.addEventListener('mousedown', (e) => {
+            if (isPaused) return;
+            isMouseDown = true;
+            startY = e.clientY;
+            isFlicking = false;
+            showIndicator(btn);
+        });
+
+        btn.addEventListener('mousemove', (e) => {
+            if (!isMouseDown || !startY || isPaused) return;
+            let currentY = e.clientY;
+            if (startY - currentY > 15) {
+                isFlicking = true;
+                activateIndicator();
+            } else {
+                isFlicking = false;
+                resetIndicator();
+            }
+        });
+
+        btn.addEventListener('mouseup', () => {
+            if (isPaused) return;
+            isMouseDown = false;
+            removeIndicator();
+            if (isFlicking) {
+                executeDeleteCell();
+            }
+            startY = 0;
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+            isMouseDown = false;
+            removeIndicator();
+        });
+
+        // --- フリック時の演出UI関数 ---
+        function showIndicator(parent) {
+            if(indicator) indicator.remove();
+            indicator = document.createElement('div');
+            indicator.innerText = "↑";
+            indicator.style.position = 'absolute';
+            indicator.style.top = '-25px';
+            indicator.style.left = '50%';
+            indicator.style.transform = 'translateX(-50%)';
+            indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+            indicator.style.color = 'white';
+            indicator.style.padding = '2px 8px';
+            indicator.style.borderRadius = '10px';
+            indicator.style.fontSize = '10px';
+            indicator.style.opacity = '0';
+            indicator.style.transition = 'all 0.15s ease';
+            indicator.style.pointerEvents = 'none';
+            indicator.style.zIndex = '100';
+            parent.appendChild(indicator);
+            
+            setTimeout(() => {
+                if(indicator) indicator.style.opacity = '0.8';
+            }, 50);
+        }
+
+        function activateIndicator() {
+            if (indicator && indicator.innerText !== "✖ 消去") {
+                indicator.innerText = "✖ 消去";
+                indicator.style.top = '-40px';
+                indicator.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+                indicator.style.transform = 'translateX(-50%) scale(1.1)';
+            }
+        }
+
+        function resetIndicator() {
+            if (indicator && indicator.innerText !== "↑") {
+                indicator.innerText = "↑";
+                indicator.style.top = '-25px';
+                indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                indicator.style.transform = 'translateX(-50%) scale(1)';
+            }
+        }
+
+        function removeIndicator() {
+            if (indicator) {
+                indicator.remove();
+                indicator = null;
+            }
+        }
+    });
+}
+
+// 実際に消去を実行する関数
+function executeDeleteCell() {
+    justFlicked = true; // クリック誤爆防止フラグをON
+    setTimeout(() => justFlicked = false, 100); // すぐに解除
+
+    if (!selectedCell || selectedCell.classList.contains('fixed')) return;
+    
+    const currentVal = getCellValue(selectedCell);
+    if (currentVal !== "") {
+        setCellValue(selectedCell, "");
+        selectedCell.classList.remove('user-input');
+        comboCount = 0;
+        updateStatusBar();
+        updateCounts();
+        getHighlightTargetAndTrigger(selectedCell);
+        errorText.innerText = "🧹 マスの数字を消去しました";
+    }
+}
+
+// 初期化実行
 updateStatusBar();
+setupFlickToDelete(); // 👈 イベントリスナーの起動
