@@ -15,7 +15,7 @@
             <button class="btn-menu" onclick="handleMenuGenerate('easy')">初級</button>
             <button class="btn-menu" onclick="handleMenuGenerate('normal')">中級</button>
             <button class="btn-menu" onclick="handleMenuGenerate('hard')">上級</button>
-            <button class="btn-menu" onclick="handleMenuGenerate('expert')">最高級</button>
+            <button class="btn-menu" onclick="handleMenuGenerate('expert')">超級</button>
         </div>
         <button class="btn-menu-load-trigger" onclick="openLoadModal()">保存したステージから読込</button>
     </div>
@@ -105,7 +105,7 @@
             <div id="game-actions-area" style="display: none; border-top: 1px solid var(--border); margin-top: 15px; padding-top: 15px; flex-direction: column; gap: 8px;">
                 <button class="btn-setting-action" style="border-color: var(--primary); color: var(--primary);" onclick="triggerSave()">この問題を保存する</button>
                 <button class="btn-setting-action" onclick="triggerReset()">最初から解き直す</button>
-                <button class="btn-setting-action" style="border-color: var(--error); color: var(--error);" onclick="triggerQuit()">ギブアップ</button>
+                <button class="btn-setting-action" style="border-color: var(--error); color: var(--error);" onclick="triggerQuit()">メニューに戻る</button>
             </div>
 
             <button class="btn-modal-close" onclick="closeSettingsModal()">閉じる</button>
